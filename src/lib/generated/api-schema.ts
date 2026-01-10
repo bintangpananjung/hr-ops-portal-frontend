@@ -17,6 +17,7 @@ const AuthenticatedUserDto = z
     name: z.string(),
     email: z.string(),
     accessToken: z.string(),
+    roles: z.array(z.string()),
   })
   .passthrough();
 const CreateEmployeeDto = z

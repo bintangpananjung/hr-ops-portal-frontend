@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_ENDPOINTS } from "@/constant/api";
+import { API_ENDPOINTS } from "@/constants/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,9 +10,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { AuthenticatedUser, LoginFormData } from "@/types/api/auth";
+import {
+  AuthRole,
+  type AuthenticatedUser,
+  type LoginFormData,
+} from "@/types/api/auth";
 import { apiClient } from "@/lib/api-client";
-import { useUser } from "@/context/user";
+import { useUser } from "@/contexts/user";
 
 const Login = () => {
   const { login } = useUser();
@@ -36,7 +40,13 @@ const Login = () => {
 
       if (response.success && response.data) {
         login(response.data);
-        window.location.href = "/";
+
+        const userRoles = response.data.roles || [];
+        if (userRoles.includes(AuthRole.EMPLOYEE)) {
+          window.location.href = "/attendance";
+        } else {
+          window.location.href = "/";
+        }
       } else {
         throw new Error(response.message || "Login failed");
       }

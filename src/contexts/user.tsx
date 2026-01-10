@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { AuthenticatedUser } from "@/types/api/auth";
-import { ACCESS_TOKEN_KEY, USER_KEY } from "@/constant/auth";
+import { ACCESS_TOKEN_KEY, USER_KEY } from "@/constants/auth";
 
 interface UserContextType {
   user: AuthenticatedUser | null;

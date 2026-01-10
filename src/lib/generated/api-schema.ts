@@ -4,6 +4,21 @@ import { z } from "zod";
 const LoginDto = z
   .object({ email: z.string(), password: z.string() })
   .passthrough();
+const BaseResponseDto = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.object({}).partial().passthrough(),
+  })
+  .passthrough();
+const AuthenticatedUserDto = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    email: z.string(),
+    accessToken: z.string(),
+  })
+  .passthrough();
 const CreateEmployeeDto = z
   .object({
     employeeId: z.string(),
@@ -17,6 +32,21 @@ const CreateEmployeeDto = z
     status: z.string(),
   })
   .passthrough();
+const EmployeeDto = z
+  .object({
+    id: z.string(),
+    employeeId: z.string(),
+    name: z.string(),
+    email: z.string(),
+    phone: z.string().optional(),
+    department: z.string().optional(),
+    position: z.string().optional(),
+    joinDate: z.string().datetime({ offset: true }).optional(),
+    status: z.enum(["ACTIVE", "INACTIVE", "ON_LEAVE"]),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 const UpdateEmployeeDto = z.object({}).partial().passthrough();
 const CreateAttendanceDto = z
   .object({
@@ -26,14 +56,32 @@ const CreateAttendanceDto = z
     photoUrl: z.string(),
   })
   .passthrough();
+const AttendanceDto = z
+  .object({
+    id: z.string(),
+    employeeId: z.string(),
+    date: z.string().datetime({ offset: true }),
+    type: z.enum(["CHECK_IN", "CHECK_OUT"]),
+    workMode: z.enum(["WFH", "WFO"]),
+    photoUrl: z.string(),
+    createdAt: z.string().datetime({ offset: true }),
+    updatedAt: z.string().datetime({ offset: true }),
+  })
+  .passthrough();
 const UpdateAttendanceDto = z.object({}).partial().passthrough();
+const UploadResponseDto = z.object({ url: z.string() }).passthrough();
 
 export const schemas = {
   LoginDto,
+  BaseResponseDto,
+  AuthenticatedUserDto,
   CreateEmployeeDto,
+  EmployeeDto,
   UpdateEmployeeDto,
   CreateAttendanceDto,
+  AttendanceDto,
   UpdateAttendanceDto,
+  UploadResponseDto,
 };
 
 const endpoints = makeApi([
@@ -49,7 +97,7 @@ const endpoints = makeApi([
         schema: CreateAttendanceDto,
       },
     ],
-    response: z.void(),
+    response: AttendanceDto,
     errors: [
       {
         status: 400,
@@ -80,7 +128,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: AttendanceDto,
     errors: [
       {
         status: 401,
@@ -152,7 +200,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.array(AttendanceDto),
     errors: [
       {
         status: 401,
@@ -183,7 +231,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.array(AttendanceDto),
     errors: [
       {
         status: 401,
@@ -197,7 +245,7 @@ const endpoints = makeApi([
     path: "/attendances/current/today",
     alias: "AttendancesController_getCurrentEmployeeTodayAttendance",
     requestFormat: "json",
-    response: z.void(),
+    response: AttendanceDto,
     errors: [
       {
         status: 401,
@@ -228,7 +276,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.void(),
+    response: z.array(AttendanceDto),
     errors: [
       {
         status: 401,
@@ -247,7 +295,7 @@ const endpoints = makeApi([
     path: "/auth/current",
     alias: "AuthController_getCurrentEmployee",
     requestFormat: "json",
-    response: z.void(),
+    response: AuthenticatedUserDto,
     errors: [
       {
         status: 401,
@@ -268,7 +316,7 @@ const endpoints = makeApi([
         schema: LoginDto,
       },
     ],
-    response: z.void(),
+    response: BaseResponseDto,
     errors: [
       {
         status: 401,
@@ -289,7 +337,7 @@ const endpoints = makeApi([
         schema: CreateEmployeeDto,
       },
     ],
-    response: z.void(),
+    response: EmployeeDto,
     errors: [
       {
         status: 400,
@@ -308,7 +356,7 @@ const endpoints = makeApi([
     path: "/employees",
     alias: "EmployeesController_findAll",
     requestFormat: "json",
-    response: z.void(),
+    response: z.array(EmployeeDto),
     errors: [
       {
         status: 401,
@@ -329,7 +377,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: EmployeeDto,
     errors: [
       {
         status: 401,
@@ -355,7 +403,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: EmployeeDto,
     errors: [
       {
         status: 401,
@@ -400,7 +448,7 @@ const endpoints = makeApi([
           .passthrough(),
       },
     ],
-    response: z.void(),
+    response: z.object({ url: z.string() }).passthrough(),
     errors: [
       {
         status: 400,

@@ -2,22 +2,18 @@ import { generateZodClientFromOpenAPI } from "openapi-zod-client";
 
 const API_URL = process.env.VITE_API_URL || "http://localhost:8000";
 
-async function fetchOpenAPISpec(url: string) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch OpenAPI spec: ${response.statusText}`);
-  }
-  return response.json();
-}
-
 async function generate() {
   try {
     console.log(`Fetching OpenAPI spec from ${API_URL}/api-json...`);
 
-    const openApiDoc = await fetchOpenAPISpec(`${API_URL}/api-json`);
+    const response = await fetch(`${API_URL}/api-json`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch OpenAPI spec: ${response.statusText}`);
+    }
+    const openApiDoc = await response.json();
 
     await generateZodClientFromOpenAPI({
-      openApiDoc,
+      openApiDoc: openApiDoc as any,
       distPath: "./src/lib/generated/api-schema.ts",
       options: {
         withAlias: true,

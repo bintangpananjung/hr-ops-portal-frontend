@@ -1,6 +1,59 @@
+import { API_BASE_URL } from "@/constant/api";
+import type { BaseResponse } from "@/types/api/common";
+import { ACCESS_TOKEN_KEY } from "@/constant/auth";
+
 export class ApiClient {
   baseUrl: string;
   constructor() {
-    this.baseUrl = process.env.VITE_API_URL || "http://localhost:8000";
+    this.baseUrl = API_BASE_URL;
+  }
+
+  async request<T, B = unknown>(
+    url: string,
+    method: string,
+    body?: B
+  ): Promise<T> {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${this.baseUrl}${url}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Request failed with status ${response.status}`
+      );
+    }
+
+    return response.json() as Promise<T>;
+  }
+
+  get<T>(url: string) {
+    return this.request<BaseResponse<T>>(url, "GET");
+  }
+
+  post<T>(url: string, body: object) {
+    return this.request<BaseResponse<T>>(url, "POST", body);
+  }
+
+  update<T>(url: string, body: object) {
+    return this.request<BaseResponse<T>>(url, "PUT", body);
+  }
+
+  delete<T>(url: string) {
+    return this.request<BaseResponse<T>>(url, "DELETE");
   }
 }
+
+export const apiClient = new ApiClient();

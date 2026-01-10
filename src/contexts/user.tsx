@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { AuthenticatedUser } from "@/types/api/auth";
 import { ACCESS_TOKEN_KEY, USER_KEY } from "@/constants/auth";
+import { apiClient } from "@/lib/api-client";
+import { API_ENDPOINTS } from "@/constants/api";
 
 interface UserContextType {
   user: AuthenticatedUser | null;
@@ -22,19 +24,31 @@ export function UserProvider({ children }: UserProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem(USER_KEY);
-    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
-    if (storedUser && token) {
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        setUser(JSON.parse(storedUser));
+        const response = await apiClient.get<AuthenticatedUser>(
+          API_ENDPOINTS.AUTH.CURRENT
+        );
+        setUser(response.data);
+        localStorage.setItem(USER_KEY, JSON.stringify(response.data));
       } catch (error) {
-        console.error("Failed to parse stored user:", error);
+        console.error("Failed to fetch current user:", error);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(ACCESS_TOKEN_KEY);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    fetchCurrentUser();
   }, []);
 
   const login = (userData: AuthenticatedUser) => {

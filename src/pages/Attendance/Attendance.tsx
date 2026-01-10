@@ -12,9 +12,11 @@ import { WorkMode } from "@/types/api/attendance";
 import { AttendanceStatus } from "@/components/attendance/AttendanceStatus";
 import { PhotoUpload } from "@/components/attendance/PhotoUpload";
 import { AttendanceActions } from "@/components/attendance/AttendanceActions";
+import MainLayout from "@/components/layout/MainLayout";
+import { User } from "lucide-react";
 
 export default function Attendance() {
-  const { user } = useUser();
+  const { user, isLoading: isLoadingUser } = useUser();
 
   const {
     todayAttendance,
@@ -68,50 +70,70 @@ export default function Attendance() {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <p>You have completed your attendance for today.</p>
-        <p className="text-sm mt-2">See you tomorrow! 👋</p>
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4">
-      <div className="max-w-2xl mx-auto pt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Attendance</CardTitle>
-            <CardDescription>Clock in and out with your photo</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {error && (
-              <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
-                {error}
-              </div>
-            )}
+    <MainLayout>
+      <div className="p-4">
+        <div className="max-w-2xl mx-auto pt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">Attendance</CardTitle>
+              <CardDescription>
+                Clock in and out with your photo
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {isLoadingUser && (
+                <div className="p-3 text-sm text-muted-foreground bg-muted/50 rounded-lg">
+                  Loading user information...
+                </div>
+              )}
 
-            {todayAttendance && (
-              <AttendanceStatus attendance={todayAttendance} />
-            )}
+              {user && (
+                <div className="flex items-center gap-3 p-4 bg-muted/50 rounded-lg">
+                  <User className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">{user.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {error && (
+                <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-lg border border-destructive/20">
+                  {error}
+                </div>
+              )}
 
-            {!hasCheckedOut && (
-              <>
-                <PhotoUpload
-                  previewUrl={previewUrl}
-                  onFileChange={handleFileChange}
-                />
-                <AttendanceActions
-                  hasCheckedIn={hasCheckedIn}
-                  isLoading={isLoading}
-                  isDisabled={!selectedFile}
-                  onClockIn={handleClockIn}
-                  onClockOut={handleClockOut}
-                />
-              </>
-            )}
+              {todayAttendance && (
+                <AttendanceStatus attendance={todayAttendance} />
+              )}
 
-            {hasCheckedOut && renderCompletionMessage()}
-          </CardContent>
-        </Card>
+              {!hasCheckedOut && (
+                <>
+                  <PhotoUpload
+                    previewUrl={previewUrl}
+                    onFileChange={handleFileChange}
+                  />
+                  <AttendanceActions
+                    hasCheckedIn={!!hasCheckedIn}
+                    isLoading={isLoading}
+                    isDisabled={!selectedFile}
+                    onClockIn={handleClockIn}
+                    onClockOut={handleClockOut}
+                  />
+                </>
+              )}
+
+              {hasCheckedOut && renderCompletionMessage()}
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </MainLayout>
   );
 }

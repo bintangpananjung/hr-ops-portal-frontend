@@ -11,4 +11,5 @@ export enum AuthRole {
   EMPLOYEE = "EMPLOYEE",
   HR = "HR",
   ADMIN = "ADMIN",
+  SUPERADMIN = "SUPERADMIN",
 }

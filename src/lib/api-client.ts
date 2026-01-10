@@ -51,6 +51,10 @@ export class ApiClient {
     return this.request<BaseResponse<T>>(url, "PUT", body);
   }
 
+  patch<T>(url: string, body: object) {
+    return this.request<BaseResponse<T>>(url, "PATCH", body);
+  }
+
   delete<T>(url: string) {
     return this.request<BaseResponse<T>>(url, "DELETE");
   }

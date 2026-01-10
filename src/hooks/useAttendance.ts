@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { apiClient } from "@/lib/api-client";
 import type { Attendance } from "@/types/api/attendance";
-import { AttendanceType, WorkMode } from "@/types/api/attendance";
-import type { UploadResponse } from "@/types/api/upload";
+import { WorkMode } from "@/types/api/attendance";
+import type { UploadDto } from "@/types/api/upload";
 
 interface UseAttendanceOptions {
   userId?: string;
@@ -39,7 +39,7 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
     const formData = new FormData();
     formData.append("file", file);
 
-    const uploadResponse = await apiClient.uploadFile<UploadResponse>(
+    const uploadResponse = await apiClient.uploadFile<UploadDto>(
       "/upload/photo",
       formData
     );
@@ -63,9 +63,9 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
         {
           employeeId: userId,
           date: new Date().toISOString(),
-          type: AttendanceType.CHECK_IN,
           workMode,
           photoUrl,
+          checkIn: new Date().toISOString(),
         }
       );
 
@@ -96,7 +96,7 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
         {
           employeeId: userId,
           date: new Date().toISOString(),
-          type: AttendanceType.CHECK_OUT,
+          checkOut: new Date().toISOString(),
           workMode,
           photoUrl,
         }
@@ -113,8 +113,8 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
     }
   };
 
-  const hasCheckedIn = todayAttendance?.type === AttendanceType.CHECK_IN;
-  const hasCheckedOut = todayAttendance?.type === AttendanceType.CHECK_OUT;
+  const hasCheckedIn = !!todayAttendance?.checkIn;
+  const hasCheckedOut = !!todayAttendance?.checkOut;
 
   return {
     todayAttendance,

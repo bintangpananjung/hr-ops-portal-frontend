@@ -1,5 +1,4 @@
 import type { Attendance } from "@/types/api/attendance";
-import { AttendanceType } from "@/types/api/attendance";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, LogOut } from "lucide-react";
 
@@ -8,7 +7,8 @@ interface AttendanceStatusProps {
 }
 
 export function AttendanceStatus({ attendance }: AttendanceStatusProps) {
-  const isCheckedOut = attendance.type === AttendanceType.CHECK_OUT;
+  console.log(attendance);
+  const isCheckedOut = !!attendance.checkOut;
 
   return (
     <div className="p-4 bg-muted rounded-lg">

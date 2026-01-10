@@ -1,23 +1,100 @@
 import { makeApi, Zodios, type ZodiosOptions } from "@zodios/core";
 import { z } from "zod";
 
+type LoginResponse = {
+  success: boolean;
+  message: string;
+  data: AuthenticatedUserDto;
+};
+type AuthenticatedUserDto = {
+  id: string;
+  name: string;
+  email: string;
+  accessToken: string;
+  roles: Array<string>;
+};
+type CurrentUserResponse = {
+  success: boolean;
+  message: string;
+  data: AuthenticatedUserDto;
+};
+type EmployeeDtoResponse = {
+  success: boolean;
+  message: string;
+  data: EmployeeDto;
+};
+type EmployeeDto = {
+  id: string;
+  employeeId: string;
+  name: string;
+  email: string;
+  phone?: string | undefined;
+  department?: string | undefined;
+  position?: string | undefined;
+  joinDate?: string | undefined;
+  status: "ACTIVE" | "INACTIVE" | "ON_LEAVE";
+  createdAt: string;
+  updatedAt: string;
+};
+type EmployeeDtoListResponse = {
+  success: boolean;
+  message: string;
+  data: Array<EmployeeDto>;
+};
+type AttendanceResponse = {
+  success: boolean;
+  message: string;
+  data: AttendanceDto;
+};
+type AttendanceDto = {
+  id: string;
+  employeeId: string;
+  date: string;
+  checkIn: string;
+  checkOut: string;
+  workMode: "WFH" | "WFO";
+  photoUrl: string;
+  createdAt: string;
+  updatedAt: string;
+};
+type AttendanceListResponse = {
+  success: boolean;
+  message: string;
+  data: Array<AttendanceDto>;
+};
+type UploadResponseDto = {
+  success: boolean;
+  message: string;
+  data: UploadDto;
+};
+type UploadDto = {
+  url: string;
+};
+
 const LoginDto = z
   .object({ email: z.string(), password: z.string() })
   .passthrough();
-const BaseResponseDto = z
-  .object({
-    success: z.boolean(),
-    message: z.string(),
-    data: z.object({}).partial().passthrough(),
-  })
-  .passthrough();
-const AuthenticatedUserDto = z
+const AuthenticatedUserDto: z.ZodType<AuthenticatedUserDto> = z
   .object({
     id: z.string(),
     name: z.string(),
     email: z.string(),
     accessToken: z.string(),
     roles: z.array(z.string()),
+  })
+  .passthrough();
+const LoginResponse: z.ZodType<LoginResponse> = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: AuthenticatedUserDto,
+  })
+  .passthrough();
+const CurrentUserResponse: z.ZodType<CurrentUserResponse> = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: AuthenticatedUserDto,
   })
   .passthrough();
 const CreateEmployeeDto = z
@@ -33,7 +110,7 @@ const CreateEmployeeDto = z
     status: z.string(),
   })
   .passthrough();
-const EmployeeDto = z
+const EmployeeDto: z.ZodType<EmployeeDto> = z
   .object({
     id: z.string(),
     employeeId: z.string(),
@@ -48,7 +125,20 @@ const EmployeeDto = z
     updatedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
+const EmployeeDtoResponse: z.ZodType<EmployeeDtoResponse> = z
+  .object({ success: z.boolean(), message: z.string(), data: EmployeeDto })
+  .passthrough();
+const EmployeeDtoListResponse: z.ZodType<EmployeeDtoListResponse> = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(EmployeeDto),
+  })
+  .passthrough();
 const UpdateEmployeeDto = z.object({}).partial().passthrough();
+const BaseResponseDto = z
+  .object({ success: z.boolean(), message: z.string() })
+  .passthrough();
 const CreateAttendanceDto = z
   .object({
     employeeId: z.string(),
@@ -57,31 +147,54 @@ const CreateAttendanceDto = z
     photoUrl: z.string(),
   })
   .passthrough();
-const AttendanceDto = z
+const AttendanceDto: z.ZodType<AttendanceDto> = z
   .object({
     id: z.string(),
     employeeId: z.string(),
     date: z.string().datetime({ offset: true }),
-    type: z.enum(["CHECK_IN", "CHECK_OUT"]),
+    checkIn: z.string().datetime({ offset: true }),
+    checkOut: z.string().datetime({ offset: true }),
     workMode: z.enum(["WFH", "WFO"]),
     photoUrl: z.string(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })
   .passthrough();
+const AttendanceResponse: z.ZodType<AttendanceResponse> = z
+  .object({ success: z.boolean(), message: z.string(), data: AttendanceDto })
+  .passthrough();
+const AttendanceListResponse: z.ZodType<AttendanceListResponse> = z
+  .object({
+    success: z.boolean(),
+    message: z.string(),
+    data: z.array(AttendanceDto),
+  })
+  .passthrough();
 const UpdateAttendanceDto = z.object({}).partial().passthrough();
-const UploadResponseDto = z.object({ url: z.string() }).passthrough();
+const UploadDto: z.ZodType<UploadDto> = z
+  .object({ url: z.string() })
+  .passthrough();
+const UploadResponseDto: z.ZodType<UploadResponseDto> = z
+  .object({ success: z.boolean(), message: z.string(), data: UploadDto })
+  .passthrough();
 
 export const schemas = {
   LoginDto,
-  BaseResponseDto,
   AuthenticatedUserDto,
+  LoginResponse,
+  CurrentUserResponse,
   CreateEmployeeDto,
   EmployeeDto,
+  EmployeeDtoResponse,
+  EmployeeDtoListResponse,
   UpdateEmployeeDto,
+  BaseResponseDto,
   CreateAttendanceDto,
   AttendanceDto,
+  AttendanceResponse,
+  AttendanceListResponse,
   UpdateAttendanceDto,
+  UploadDto,
   UploadResponseDto,
 };
 
@@ -98,7 +211,7 @@ const endpoints = makeApi([
         schema: CreateAttendanceDto,
       },
     ],
-    response: AttendanceDto,
+    response: AttendanceResponse,
     errors: [
       {
         status: 400,
@@ -129,7 +242,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: AttendanceDto,
+    response: AttendanceResponse,
     errors: [
       {
         status: 401,
@@ -160,7 +273,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: BaseResponseDto,
     errors: [
       {
         status: 401,
@@ -201,7 +314,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.array(AttendanceDto),
+    response: AttendanceListResponse,
     errors: [
       {
         status: 401,
@@ -232,7 +345,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.array(AttendanceDto),
+    response: AttendanceListResponse,
     errors: [
       {
         status: 401,
@@ -246,7 +359,7 @@ const endpoints = makeApi([
     path: "/attendances/current/today",
     alias: "AttendancesController_getCurrentEmployeeTodayAttendance",
     requestFormat: "json",
-    response: AttendanceDto,
+    response: AttendanceResponse,
     errors: [
       {
         status: 401,
@@ -277,7 +390,7 @@ const endpoints = makeApi([
         schema: z.string().optional(),
       },
     ],
-    response: z.array(AttendanceDto),
+    response: AttendanceListResponse,
     errors: [
       {
         status: 401,
@@ -296,7 +409,7 @@ const endpoints = makeApi([
     path: "/auth/current",
     alias: "AuthController_getCurrentEmployee",
     requestFormat: "json",
-    response: AuthenticatedUserDto,
+    response: CurrentUserResponse,
     errors: [
       {
         status: 401,
@@ -317,7 +430,7 @@ const endpoints = makeApi([
         schema: LoginDto,
       },
     ],
-    response: BaseResponseDto,
+    response: LoginResponse,
     errors: [
       {
         status: 401,
@@ -338,7 +451,7 @@ const endpoints = makeApi([
         schema: CreateEmployeeDto,
       },
     ],
-    response: EmployeeDto,
+    response: EmployeeDtoResponse,
     errors: [
       {
         status: 400,
@@ -357,7 +470,7 @@ const endpoints = makeApi([
     path: "/employees",
     alias: "EmployeesController_findAll",
     requestFormat: "json",
-    response: z.array(EmployeeDto),
+    response: EmployeeDtoListResponse,
     errors: [
       {
         status: 401,
@@ -378,7 +491,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: EmployeeDto,
+    response: EmployeeDtoResponse,
     errors: [
       {
         status: 401,
@@ -404,7 +517,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: EmployeeDto,
+    response: EmployeeDtoResponse,
     errors: [
       {
         status: 401,
@@ -425,7 +538,7 @@ const endpoints = makeApi([
         schema: z.string(),
       },
     ],
-    response: z.void(),
+    response: BaseResponseDto,
     errors: [
       {
         status: 401,
@@ -449,7 +562,7 @@ const endpoints = makeApi([
           .passthrough(),
       },
     ],
-    response: z.object({ url: z.string() }).passthrough(),
+    response: UploadResponseDto,
     errors: [
       {
         status: 400,

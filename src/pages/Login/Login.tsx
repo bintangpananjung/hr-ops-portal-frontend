@@ -44,6 +44,12 @@ const Login = () => {
         const userRoles = response.data.roles || [];
         if (userRoles.includes(AuthRole.EMPLOYEE)) {
           window.location.href = "/attendance";
+        } else if (
+          userRoles.includes(AuthRole.HR) ||
+          userRoles.includes(AuthRole.ADMIN) ||
+          userRoles.includes(AuthRole.SUPERADMIN)
+        ) {
+          window.location.href = "/employees";
         } else {
           window.location.href = "/";
         }

@@ -1,0 +1,20 @@
+services:
+  hr-ops-portal-frontend-dev:
+    container_name: hr-ops-portal-frontend-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: ["sh", "-c", "pnpm run dev -- --host"]
+    networks:
+      - hr-ops-portal-network
+
+networks:
+  hr-ops-portal-network:
+    external: true

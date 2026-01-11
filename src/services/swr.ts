@@ -3,7 +3,7 @@ import { apiClient } from "@/lib/api-client";
 
 const defaultFetcher = async <T>(url: string): Promise<T> => {
   const response = await apiClient.get<T>(url);
-  if (response.success && response.data) {
+  if (response.success && response.data !== undefined) {
     return response.data;
   }
   throw new Error((response as any).message || "Failed to fetch data");

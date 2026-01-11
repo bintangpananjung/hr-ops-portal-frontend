@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useEmployees } from "@/hooks/useEmployees";
+import { usePagination } from "@/hooks/usePagination";
 import {
   Card,
   CardContent,
@@ -27,16 +28,23 @@ import type {
 } from "@/types/api/employee";
 import { useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function Employees() {
+  const { page, limit, goToPage, setPageSize } = usePagination({
+    initialPage: 1,
+    initialLimit: 10,
+  });
+
   const {
     employees,
+    meta,
     isLoading,
     error,
     createEmployee,
     updateEmployee,
     deleteEmployee,
-  } = useEmployees();
+  } = useEmployees(page, limit);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(
@@ -171,6 +179,13 @@ export default function Employees() {
                   </TableBody>
                 </Table>
               </div>
+            )}
+            {meta && (
+              <Pagination
+                meta={meta}
+                onPageChange={goToPage}
+                onLimitChange={setPageSize}
+              />
             )}
           </CardContent>
         </Card>

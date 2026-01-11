@@ -2,6 +2,7 @@ import { Fragment, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSWRService } from "@/services/swr";
 import { useEmployeeAttendance } from "@/hooks/useEmployeeAttendance";
+import { usePagination } from "@/hooks/usePagination";
 import { API_ENDPOINTS } from "@/constants/api";
 import {
   Card,
@@ -24,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Calendar } from "lucide-react";
 import type { Employee } from "@/types/api/employee";
+import { Pagination } from "@/components/ui/pagination";
 
 export default function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
@@ -31,17 +33,26 @@ export default function EmployeeDetail() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  const { page, limit, goToPage, setPageSize } = usePagination({
+    initialPage: 1,
+    initialLimit: 10,
+  });
+
   const { data: employee, isLoading } = useSWRService<Employee>(
     id ? API_ENDPOINTS.EMPLOYEES.DETAIL(id) : null
   );
 
-  const { attendances, isLoading: isLoadingAttendance } = useEmployeeAttendance(
-    {
-      employeeId: id,
-      startDate,
-      endDate,
-    }
-  );
+  const {
+    attendances,
+    meta,
+    isLoading: isLoadingAttendance,
+  } = useEmployeeAttendance({
+    employeeId: id,
+    startDate,
+    endDate,
+    page,
+    limit,
+  });
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
@@ -50,13 +61,6 @@ export default function EmployeeDetail() {
       ON_LEAVE: "secondary",
     };
     return <Badge variant={variants[status] || "default"}>{status}</Badge>;
-  };
-
-  const getAttendanceTypeBadge = (isCheckIn?: boolean) => {
-    if (isCheckIn) {
-      return <Badge variant="default">Check In</Badge>;
-    }
-    return <Badge variant="destructive">Check Out</Badge>;
   };
 
   if (isLoading) {
@@ -292,6 +296,13 @@ export default function EmployeeDetail() {
                   </TableBody>
                 </Table>
               </div>
+            )}
+            {meta && (
+              <Pagination
+                meta={meta}
+                onPageChange={goToPage}
+                onLimitChange={setPageSize}
+              />
             )}
           </CardContent>
         </Card>

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useSWRService } from "@/services/swr";
+import { useState, useMemo } from "react";
+import useSWR from "swr";
 import { apiClient } from "@/lib/api-client";
 import type {
   Employee,
@@ -8,15 +8,34 @@ import type {
 } from "@/types/api/employee";
 import { removeEmptyStrings } from "@/helpers/payload";
 import { API_ENDPOINTS } from "@/constants/api";
+import type { PaginatedResponse } from "@/types/pagination";
 
-export function useEmployees() {
+export function useEmployees(page: number = 1, limit: number = 10) {
   const [error, setError] = useState<string | null>(null);
 
+  const swrKey = useMemo(
+    () => `${API_ENDPOINTS.EMPLOYEES.LIST}?page=${page}&limit=${limit}`,
+    [page, limit]
+  );
+
+  const paginatedFetcher = async (
+    url: string
+  ): Promise<PaginatedResponse<Employee>> => {
+    const result = await apiClient.get<Employee[]>(url);
+    if (result.success) {
+      return result as unknown as PaginatedResponse<Employee>;
+    }
+    throw new Error(result.message || "Failed to fetch employees");
+  };
+
   const {
-    data: employees,
+    data: response,
     isLoading,
     mutate,
-  } = useSWRService<Employee[]>(API_ENDPOINTS.EMPLOYEES.LIST);
+  } = useSWR<PaginatedResponse<Employee>>(swrKey, paginatedFetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
+  });
 
   const createEmployee = async (data: CreateEmployee) => {
     setError(null);
@@ -74,11 +93,11 @@ export function useEmployees() {
   const getEmployee = async (id: string): Promise<Employee | null> => {
     setError(null);
     try {
-      const response = await apiClient.get<Employee>(
+      const result = await apiClient.get<Employee>(
         API_ENDPOINTS.EMPLOYEES.DETAIL(id)
       );
-      if (response.success && response.data) {
-        return response.data;
+      if (result.success && result.data) {
+        return result.data;
       }
       return null;
     } catch (err) {
@@ -88,7 +107,8 @@ export function useEmployees() {
   };
 
   return {
-    employees: employees || [],
+    employees: response?.data || [],
+    meta: response?.meta,
     isLoading,
     error,
     fetchEmployees: mutate,

@@ -7,7 +7,9 @@ export const AuthenticatedUserSchema = schemas.AuthenticatedUserDto;
 export type LoginFormData = z.infer<typeof LoginSchema>;
 export type AuthenticatedUser = z.infer<typeof AuthenticatedUserSchema>;
 
-export enum AuthRole {
-  EMPLOYEE = "EMPLOYEE",
-  HR = "HR",
-}
+export const AuthRole = {
+  EMPLOYEE: "EMPLOYEE",
+  HR: "HR",
+} as const;
+
+export type AuthRole = (typeof AuthRole)[keyof typeof AuthRole];

@@ -7,7 +7,9 @@ export const CreateAttendanceSchema = schemas.CreateAttendanceDto;
 export type Attendance = z.infer<typeof AttendanceSchema>;
 export type CreateAttendance = z.infer<typeof CreateAttendanceSchema>;
 
-export enum WorkMode {
-  WFH = "WFH",
-  WFO = "WFO",
-}
+export const WorkMode = {
+  WFH: "WFH",
+  WFO: "WFO",
+} as const;
+
+export type WorkMode = (typeof WorkMode)[keyof typeof WorkMode];

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { SWRProvider } from "./contexts/swr";
 import { UserProvider } from "./contexts/user";
 import Login from "./pages/Login/Login";
 import Attendance from "./pages/Attendance/Attendance";
@@ -8,40 +9,42 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 
 function App() {
   return (
-    <UserProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/attendance"
-            element={
-              <ProtectedRoute
-                allowedRoles={["EMPLOYEE", "ADMIN", "SUPERADMIN", "HR"]}
-              >
-                <Attendance />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employees"
-            element={
-              <ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "HR"]}>
-                <Employees />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/employees/:id"
-            element={
-              <ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "HR"]}>
-                <EmployeeDetail />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </UserProvider>
+    <SWRProvider>
+      <UserProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/attendance"
+              element={
+                <ProtectedRoute
+                  allowedRoles={["EMPLOYEE", "ADMIN", "SUPERADMIN", "HR"]}
+                >
+                  <Attendance />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "HR"]}>
+                  <Employees />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees/:id"
+              element={
+                <ProtectedRoute allowedRoles={["ADMIN", "SUPERADMIN", "HR"]}>
+                  <EmployeeDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </UserProvider>
+    </SWRProvider>
   );
 }
 

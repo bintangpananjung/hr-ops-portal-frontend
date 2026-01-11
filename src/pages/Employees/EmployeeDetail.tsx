@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { Fragment, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useEmployees } from "@/hooks/useEmployees";
+import { useSWRService } from "@/services/swr";
 import { useEmployeeAttendance } from "@/hooks/useEmployeeAttendance";
+import { API_ENDPOINTS } from "@/constants/api";
 import {
   Card,
   CardContent,
@@ -27,11 +28,12 @@ import type { Employee } from "@/types/api/employee";
 export default function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getEmployee } = useEmployees();
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const { data: employee, isLoading } = useSWRService<Employee>(
+    id ? API_ENDPOINTS.EMPLOYEES.DETAIL(id) : null
+  );
 
   const { attendances, isLoading: isLoadingAttendance } = useEmployeeAttendance(
     {
@@ -40,17 +42,6 @@ export default function EmployeeDetail() {
       endDate,
     }
   );
-
-  useEffect(() => {
-    const fetchEmployee = async () => {
-      if (id) {
-        const data = await getEmployee(id);
-        setEmployee(data);
-        setIsLoading(false);
-      }
-    };
-    fetchEmployee();
-  }, [id]);
 
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive"> = {
@@ -61,17 +52,11 @@ export default function EmployeeDetail() {
     return <Badge variant={variants[status] || "default"}>{status}</Badge>;
   };
 
-  const getAttendanceTypeBadge = (
-    isCheckIn?: boolean,
-    isCheckOut?: boolean
-  ) => {
-    if (isCheckOut) {
-      return <Badge variant="destructive">Check Out</Badge>;
-    }
+  const getAttendanceTypeBadge = (isCheckIn?: boolean) => {
     if (isCheckIn) {
       return <Badge variant="default">Check In</Badge>;
     }
-    return <Badge variant="secondary">No Record</Badge>;
+    return <Badge variant="destructive">Check Out</Badge>;
   };
 
   if (isLoading) {
@@ -234,39 +219,74 @@ export default function EmployeeDetail() {
                       </TableRow>
                     ) : (
                       attendances.map((attendance) => (
-                        <TableRow key={attendance.id}>
-                          <TableCell className="font-medium">
-                            {new Date(attendance.date).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            {getAttendanceTypeBadge(
-                              !!attendance.checkIn,
-                              !!attendance.checkOut
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {attendance.workMode}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(
-                              attendance.createdAt
-                            ).toLocaleTimeString()}
-                          </TableCell>
-                          <TableCell>
-                            {attendance.photoUrl && (
-                              <a
-                                href={attendance.photoUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline"
-                              >
-                                View Photo
-                              </a>
-                            )}
-                          </TableCell>
-                        </TableRow>
+                        <Fragment key={attendance.id}>
+                          {attendance.checkIn && (
+                            <TableRow key={`check-in-${attendance.id}`}>
+                              <TableCell className="font-medium">
+                                {new Date(
+                                  attendance.checkIn
+                                ).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="default">Check In</Badge>;
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary">
+                                  {attendance.workMode}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(
+                                  attendance.checkIn
+                                ).toLocaleTimeString()}
+                              </TableCell>
+                              <TableCell>
+                                {attendance.checkInPhoto && (
+                                  <a
+                                    href={attendance.checkInPhoto}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                  >
+                                    View Photo
+                                  </a>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                          {attendance.checkOut && (
+                            <TableRow key={attendance.id}>
+                              <TableCell className="font-medium">
+                                {new Date(attendance.date).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="destructive">Check Out</Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary">
+                                  {attendance.workMode}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(
+                                  attendance.checkOut
+                                ).toLocaleTimeString()}
+                              </TableCell>
+                              <TableCell>
+                                {attendance.checkOutPhoto && (
+                                  <a
+                                    href={attendance.checkOutPhoto}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                  >
+                                    View Photo
+                                  </a>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </Fragment>
                       ))
                     )}
                   </TableBody>

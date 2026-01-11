@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
+import { useSWRService } from "@/services/swr";
 import type { AuthenticatedUser } from "@/types/api/auth";
 import { ACCESS_TOKEN_KEY, USER_KEY } from "@/constants/auth";
-import { apiClient } from "@/lib/api-client";
 import { API_ENDPOINTS } from "@/constants/api";
 
 interface UserContextType {
@@ -21,51 +21,42 @@ interface UserProviderProps {
 
 export function UserProvider({ children }: UserProviderProps) {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const token = localStorage.getItem(ACCESS_TOKEN_KEY);
 
-  useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await apiClient.get<AuthenticatedUser>(
-          API_ENDPOINTS.AUTH.CURRENT
-        );
-        setUser(response.data);
-        localStorage.setItem(USER_KEY, JSON.stringify(response.data));
-      } catch (error) {
+  const { data, isLoading, mutate } = useSWRService<AuthenticatedUser>(
+    token ? API_ENDPOINTS.AUTH.CURRENT : null,
+    {
+      revalidateOnReconnect: true,
+      onSuccess: (userData) => {
+        setUser(userData);
+        localStorage.setItem(USER_KEY, JSON.stringify(userData));
+      },
+      onError: (error) => {
         console.error("Failed to fetch current user:", error);
         localStorage.removeItem(USER_KEY);
         localStorage.removeItem(ACCESS_TOKEN_KEY);
         setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCurrentUser();
-  }, []);
+      },
+    }
+  );
 
   const login = (userData: AuthenticatedUser) => {
     setUser(userData);
     localStorage.setItem(ACCESS_TOKEN_KEY, userData.accessToken);
     localStorage.setItem(USER_KEY, JSON.stringify(userData));
+    mutate(userData);
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    mutate(undefined, false);
   };
 
   const value: UserContextType = {
-    user,
-    isAuthenticated: !!user,
+    user: user || data || null,
+    isAuthenticated: !!(user || data),
     isLoading,
     login,
     logout,

@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useSWRService } from "@/services/swr";
 import { apiClient } from "@/lib/api-client";
 import type { Attendance } from "@/types/api/attendance";
 import { WorkMode } from "@/types/api/attendance";
 import type { UploadDto } from "@/types/api/upload";
+import { API_ENDPOINTS } from "@/constants/api";
 
 interface UseAttendanceOptions {
   userId?: string;
@@ -10,37 +12,26 @@ interface UseAttendanceOptions {
 
 export function useAttendance(options: UseAttendanceOptions = {}) {
   const { userId } = options;
-  const [todayAttendance, setTodayAttendance] = useState<Attendance | null>(
-    null
-  );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchTodayAttendance = async () => {
-    try {
-      const response = await apiClient.get<Attendance>(
-        "/attendances/current/today"
-      );
-      if (response.data) {
-        setTodayAttendance(response.data);
-      }
-    } catch (err: any) {
-      if (err?.response?.status !== 404) {
-        console.error("Error fetching today's attendance:", err);
-      }
+  const { data: todayAttendance, mutate } = useSWRService<Attendance | null>(
+    API_ENDPOINTS.ATTENDANCES.CURRENT_TODAY,
+    {
+      onError: (err: any) => {
+        if (err?.response?.status !== 404) {
+          console.error("Error fetching today's attendance:", err);
+        }
+      },
     }
-  };
-
-  useEffect(() => {
-    fetchTodayAttendance();
-  }, []);
+  );
 
   const uploadPhoto = async (file: File): Promise<string> => {
     const formData = new FormData();
     formData.append("file", file);
 
     const uploadResponse = await apiClient.uploadFile<UploadDto>(
-      "/upload/photo",
+      API_ENDPOINTS.UPLOAD.PHOTO,
       formData
     );
 
@@ -59,17 +50,17 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
       const photoUrl = await uploadPhoto(file);
 
       const attendanceResponse = await apiClient.post<Attendance>(
-        "/attendances",
+        API_ENDPOINTS.ATTENDANCES.CREATE,
         {
           employeeId: userId,
           date: new Date().toISOString(),
           workMode,
-          photoUrl,
+          checkInPhoto: photoUrl,
           checkIn: new Date().toISOString(),
         }
       );
 
-      setTodayAttendance(attendanceResponse.data);
+      await mutate(attendanceResponse.data);
       return attendanceResponse.data;
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to clock in";
@@ -92,17 +83,17 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
       const photoUrl = await uploadPhoto(file);
 
       const attendanceResponse = await apiClient.post<Attendance>(
-        "/attendances",
+        API_ENDPOINTS.ATTENDANCES.CREATE,
         {
           employeeId: userId,
           date: new Date().toISOString(),
           checkOut: new Date().toISOString(),
           workMode,
-          photoUrl,
+          checkOutPhoto: photoUrl,
         }
       );
 
-      setTodayAttendance(attendanceResponse.data);
+      await mutate(attendanceResponse.data);
       return attendanceResponse.data;
     } catch (err: any) {
       const errorMsg = err?.response?.data?.message || "Failed to clock out";
@@ -117,7 +108,7 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
   const hasCheckedOut = !!todayAttendance?.checkOut;
 
   return {
-    todayAttendance,
+    todayAttendance: todayAttendance ?? null,
     isLoading,
     error,
     setError,
@@ -125,6 +116,6 @@ export function useAttendance(options: UseAttendanceOptions = {}) {
     clockOut,
     hasCheckedIn,
     hasCheckedOut,
-    refetch: fetchTodayAttendance,
+    refetch: mutate,
   };
 }

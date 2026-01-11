@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { apiClient } from "@/lib/api-client";
+import { useSWRService } from "@/services/swr";
 import type { Attendance } from "@/types/api/attendance";
+import { API_ENDPOINTS } from "@/constants/api";
 
 interface UseEmployeeAttendanceProps {
   employeeId?: string;
@@ -13,46 +13,29 @@ export function useEmployeeAttendance({
   startDate,
   endDate,
 }: UseEmployeeAttendanceProps = {}) {
-  const [attendances, setAttendances] = useState<Attendance[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const getSwrKey = () => {
+    if (!employeeId) return null;
 
-  const fetchAttendances = async () => {
-    if (!employeeId) return;
+    const params = new URLSearchParams();
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
 
-    setIsLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams();
-      if (startDate) params.append("startDate", startDate);
-      if (endDate) params.append("endDate", endDate);
-
-      const queryString = params.toString();
-      const url = `/attendances/employee/${employeeId}${
-        queryString ? `?${queryString}` : ""
-      }`;
-
-      const response = await apiClient.get<Attendance[]>(url);
-      if (response.success && response.data) {
-        setAttendances(response.data);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch attendances"
-      );
-    } finally {
-      setIsLoading(false);
-    }
+    const queryString = params.toString();
+    const baseUrl = API_ENDPOINTS.ATTENDANCES.BY_EMPLOYEE(employeeId);
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   };
 
-  useEffect(() => {
-    fetchAttendances();
-  }, [employeeId, startDate, endDate]);
-
-  return {
-    attendances,
+  const {
+    data: attendances,
     isLoading,
     error,
-    refetch: fetchAttendances,
+    mutate,
+  } = useSWRService<Attendance[]>(getSwrKey());
+
+  return {
+    attendances: attendances || [],
+    isLoading,
+    error: error?.message || null,
+    refetch: mutate,
   };
 }

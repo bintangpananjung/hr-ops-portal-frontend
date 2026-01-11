@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useSWRService } from "@/services/swr";
 import { apiClient } from "@/lib/api-client";
 import type {
   Employee,
@@ -6,36 +7,26 @@ import type {
   UpdateEmployee,
 } from "@/types/api/employee";
 import { removeEmptyStrings } from "@/helpers/payload";
+import { API_ENDPOINTS } from "@/constants/api";
 
 export function useEmployees() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchEmployees = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await apiClient.get<Employee[]>("/employees");
-      console.log(response);
-      if (response.success && response.data) {
-        setEmployees(response.data);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch employees"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    data: employees,
+    isLoading,
+    mutate,
+  } = useSWRService<Employee[]>(API_ENDPOINTS.EMPLOYEES.LIST);
 
   const createEmployee = async (data: CreateEmployee) => {
     setError(null);
     try {
-      const response = await apiClient.post<Employee>("/employees", data);
+      const response = await apiClient.post<Employee>(
+        API_ENDPOINTS.EMPLOYEES.CREATE,
+        data
+      );
       if (response.success && response.data) {
-        await fetchEmployees();
+        await mutate();
         return response.data;
       }
       throw new Error(response.message || "Failed to create employee");
@@ -51,11 +42,11 @@ export function useEmployees() {
     setError(null);
     try {
       const response = await apiClient.patch<Employee>(
-        `/employees/${id}`,
+        API_ENDPOINTS.EMPLOYEES.UPDATE(id),
         removeEmptyStrings(data)
       );
       if (response.success && response.data) {
-        await fetchEmployees();
+        await mutate();
         return response.data;
       }
       throw new Error(response.message || "Failed to update employee");
@@ -70,8 +61,8 @@ export function useEmployees() {
   const deleteEmployee = async (id: string) => {
     setError(null);
     try {
-      await apiClient.delete(`/employees/${id}`);
-      await fetchEmployees();
+      await apiClient.delete(API_ENDPOINTS.EMPLOYEES.DELETE(id));
+      await mutate();
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete employee";
@@ -83,7 +74,9 @@ export function useEmployees() {
   const getEmployee = async (id: string): Promise<Employee | null> => {
     setError(null);
     try {
-      const response = await apiClient.get<Employee>(`/employees/${id}`);
+      const response = await apiClient.get<Employee>(
+        API_ENDPOINTS.EMPLOYEES.DETAIL(id)
+      );
       if (response.success && response.data) {
         return response.data;
       }
@@ -94,15 +87,11 @@ export function useEmployees() {
     }
   };
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
   return {
-    employees,
+    employees: employees || [],
     isLoading,
     error,
-    fetchEmployees,
+    fetchEmployees: mutate,
     createEmployee,
     updateEmployee,
     deleteEmployee,

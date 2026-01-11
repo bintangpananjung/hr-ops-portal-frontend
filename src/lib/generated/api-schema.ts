@@ -54,7 +54,8 @@ type AttendanceDto = {
   checkIn: string;
   checkOut: string;
   workMode: "WFH" | "WFO";
-  photoUrl: string;
+  checkInPhoto: string;
+  checkOutPhoto: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -147,7 +148,8 @@ const CreateAttendanceDto = z
     employeeId: z.string(),
     date: z.string(),
     type: z.string(),
-    photoUrl: z.string(),
+    checkInPhoto: z.string(),
+    checkOutPhoto: z.string(),
   })
   .passthrough();
 const AttendanceDto: z.ZodType<AttendanceDto> = z
@@ -158,7 +160,8 @@ const AttendanceDto: z.ZodType<AttendanceDto> = z
     checkIn: z.string().datetime({ offset: true }),
     checkOut: z.string().datetime({ offset: true }),
     workMode: z.enum(["WFH", "WFO"]),
-    photoUrl: z.string(),
+    checkInPhoto: z.string(),
+    checkOutPhoto: z.string(),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
   })

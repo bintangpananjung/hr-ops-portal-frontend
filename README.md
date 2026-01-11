@@ -1,73 +1,104 @@
-# React + TypeScript + Vite
+# HR OPS PORTAL - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive HR operations portal frontend for managing Work From Home (WFH) attendance and HR monitoring.
 
-Currently, two official plugins are available:
+## Purpose
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+The HR OPS PORTAL frontend provides a modern, responsive interface for:
 
-## React Compiler
+- WFH attendance tracking and management
+- Employee monitoring dashboard
+- HR operations reporting
+- Real-time attendance analytics
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+## Prerequisites
 
-## Expanding the ESLint configuration
+- Docker
+- Docker Compose
+- Backend setup: Follow the [backend setup instructions](https://github.com/bintangpananjung/hr-ops-portal-backend/blob/main/README.md)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Development Setup
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 1. Network Setup (One-time setup)
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+docker network create hr-ops-portal-network
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Environment Setup
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env
 ```
+
+### 3. Start Development Environment
+
+```bash
+docker compose up -d
+```
+
+### 4. Access the Application
+
+Navigate to: http://localhost:5173
+
+**Note**: The backend API should be running on http://localhost:8000 for the frontend to function properly.
+
+## API Documentation
+
+The frontend communicates with the backend API. Refer to the backend documentation for API details:
+
+- **Swagger UI**: http://localhost:8000/docs
+- **OpenAPI JSON**: http://localhost:8000/api-json
+
+## Important Development Guidelines
+
+**Always run everything in the Docker environment.** This includes:
+
+- Package installation: `docker exec -it hr-ops-portal-frontend-dev sh -c "pnpm install <package>"`
+- Running scripts: `docker exec -it hr-ops-portal-frontend-dev sh -c "pnpm run <script>"`
+- Building: `docker exec -it hr-ops-portal-frontend-dev sh -c "pnpm run build"`
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Container won't start**
+
+   - Check if Docker is running: `docker --version`
+   - Verify the network exists: `docker network ls | grep hr-ops-portal-network`
+   - If network doesn't exist, run the one-time setup command above
+
+2. **Backend API connection issues**
+
+   - Ensure the backend container is running: `docker compose ps`
+   - Verify API URL in `.env` file matches backend address
+   - Check backend logs: `docker compose logs hr-ops-portal-backend-dev`
+
+3. **Port conflicts**
+
+   - Check if port 5173 is in use: `lsof -i :5173`
+   - Stop conflicting services or modify the port in docker-compose.yml
+
+4. **Build errors**
+   - Check container logs: `docker compose logs hr-ops-portal-frontend-dev`
+   - Verify environment variables in `.env`
+   - Ensure all dependencies are installed in the container
+
+### Getting Help
+
+If you encounter issues not covered above:
+
+1. Check container logs: `docker compose logs hr-ops-portal-frontend-dev`
+2. Verify environment variables in `.env`
+3. Ensure all required services are running: `docker compose ps`
+4. Restart services: `docker compose down && docker compose up -d`
+
+## Architecture
+
+This frontend is built with:
+
+- **React** - UI framework
+- **TypeScript** - Type-safe JavaScript
+- **Vite** - Build tool and development server
+- **Tailwind CSS** - Utility-first CSS framework
+- **Docker** - Containerization for consistent development environment

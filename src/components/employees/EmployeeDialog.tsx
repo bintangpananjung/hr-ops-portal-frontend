@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import type { CreateEmployee, Employee } from "@/types/api/employee";
 import { EmployeeStatus } from "@/types/api/employee";
+import { AuthRole } from "@/types/api/auth";
 
 interface EmployeeDialogProps {
   open: boolean;
@@ -44,7 +45,8 @@ export function EmployeeDialog({
     department: "",
     position: "",
     joinDate: new Date().toISOString().split("T")[0],
-    status: "ACTIVE" as const,
+    status: EmployeeStatus.ACTIVE,
+    roles: [AuthRole.EMPLOYEE],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,7 @@ export function EmployeeDialog({
           ? new Date(employee.joinDate).toISOString().split("T")[0]
           : "",
         status: employee.status,
+        roles: employee.roles || [],
       });
     } else {
       setFormData({
@@ -74,7 +77,8 @@ export function EmployeeDialog({
         department: "",
         position: "",
         joinDate: new Date().toISOString().split("T")[0],
-        status: "ACTIVE",
+        status: EmployeeStatus.ACTIVE,
+        roles: [AuthRole.EMPLOYEE],
       });
     }
     setError(null);
@@ -216,25 +220,46 @@ export function EmployeeDialog({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => handleChange("status", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={EmployeeStatus.ACTIVE}>Active</SelectItem>
-                  <SelectItem value={EmployeeStatus.INACTIVE}>
-                    Inactive
-                  </SelectItem>
-                  <SelectItem value={EmployeeStatus.ON_LEAVE}>
-                    On Leave
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="roles">Roles</Label>
+                <Select
+                  value={formData.roles?.[0]}
+                  onValueChange={(value) =>
+                    setFormData((prev) => ({ ...prev, roles: [value] }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={AuthRole.EMPLOYEE}>Employee</SelectItem>
+                    <SelectItem value={AuthRole.HR}>HR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => handleChange("status", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={EmployeeStatus.ACTIVE}>
+                      Active
+                    </SelectItem>
+                    <SelectItem value={EmployeeStatus.INACTIVE}>
+                      Inactive
+                    </SelectItem>
+                    <SelectItem value={EmployeeStatus.ON_LEAVE}>
+                      On Leave
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

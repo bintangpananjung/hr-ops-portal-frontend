@@ -153,6 +153,12 @@ export default function EmployeeDetail() {
                 </p>
               </div>
               <div>
+                <Label className="text-muted-foreground">Role</Label>
+                <p className="text-lg font-medium">
+                  {employee.roles?.join(", ") || "-"}
+                </p>
+              </div>
+              <div>
                 <Label className="text-muted-foreground">Join Date</Label>
                 <p className="text-lg font-medium">
                   {employee.joinDate

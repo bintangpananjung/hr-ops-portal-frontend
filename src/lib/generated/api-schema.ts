@@ -35,6 +35,7 @@ type EmployeeDto = {
   status: "ACTIVE" | "INACTIVE" | "ON_LEAVE";
   createdAt: string;
   updatedAt: string;
+  roles: Array<string>;
 };
 type EmployeeDtoListResponse = {
   success: boolean;
@@ -106,8 +107,9 @@ const CreateEmployeeDto = z
     phone: z.string(),
     department: z.string(),
     position: z.string(),
-    joinDate: z.string(),
+    joinDate: z.string().datetime({ offset: true }),
     status: z.string(),
+    roles: z.array(z.string()),
   })
   .passthrough();
 const EmployeeDto: z.ZodType<EmployeeDto> = z
@@ -123,6 +125,7 @@ const EmployeeDto: z.ZodType<EmployeeDto> = z
     status: z.enum(["ACTIVE", "INACTIVE", "ON_LEAVE"]),
     createdAt: z.string().datetime({ offset: true }),
     updatedAt: z.string().datetime({ offset: true }),
+    roles: z.array(z.string()),
   })
   .passthrough();
 const EmployeeDtoResponse: z.ZodType<EmployeeDtoResponse> = z
